@@ -1,0 +1,147 @@
+<style>
+  .bp-board { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 14px; color: #111; }
+  .bp-header { display: flex; align-items: center; justify-content: space-between; min-height: 86px; }
+  .bp-brand { display: flex; align-items: center; gap: 18px; }
+  .bp-mark { width: 54px; height: 54px; position: relative; transform: rotate(45deg); }
+  .bp-mark span { position: absolute; width: 19px; height: 19px; background: #111; }
+  .bp-mark span:nth-child(1) { left: 18px; top: 0; }
+  .bp-mark span:nth-child(2) { left: 0; top: 18px; }
+  .bp-mark span:nth-child(3) { right: 0; top: 18px; }
+  .bp-mark span:nth-child(4) { left: 18px; bottom: 0; }
+  .bp-title { font-size: 35px; line-height: 1; font-weight: 800; letter-spacing: 1px; }
+  .bp-subtitle { margin-top: 9px; color: #666; font-size: 19px; font-weight: 700; letter-spacing: 2px; }
+  .bp-meta { text-align: right; }
+  .bp-updated { font-size: 20px; font-weight: 800; }
+  .bp-universe { margin-top: 10px; color: #555; font-size: 17px; font-weight: 700; word-spacing: 10px; }
+  .bp-main { min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 24px; }
+  .bp-panel { min-width: 0; border: 3px solid #111; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; background: #fff; }
+  .bp-panel-head { min-height: 105px; padding: 20px 28px; background: #111; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+  .bp-panel-title { font-size: 27px; line-height: 1; font-weight: 800; letter-spacing: 1px; }
+  .bp-panel-note { margin-top: 13px; color: #ddd; font-size: 16px; }
+  .bp-summary { display: flex; gap: 25px; }
+  .bp-summary-box + .bp-summary-box { padding-left: 25px; border-left: 2px solid #666; }
+  .bp-summary-label { color: #bbb; font-size: 13px; font-weight: 800; }
+  .bp-summary-value { margin-top: 7px; font-size: 24px; font-weight: 800; font-family: monospace; }
+  .bp-table-head, .bp-oi-row { display: grid; grid-template-columns: 1.52fr .92fr .82fr .82fr 1.22fr; align-items: center; column-gap: 12px; padding: 0 28px; }
+  .bp-table-head { min-height: 52px; background: #e7e5df; font-size: 15px; font-weight: 800; }
+  .bp-oi-list { flex: 1; display: grid; grid-template-rows: repeat(10, minmax(0, 1fr)); padding: 0 20px; }
+  .bp-oi-row { min-height: 0; padding: 0 8px; border-bottom: 2px solid #dedbd4; }
+  .bp-oi-row:last-child { border-bottom: 0; }
+  .bp-symbol { min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 800; white-space: nowrap; }
+  .bp-tag { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-width: 35px; height: 25px; padding: 0 7px; border-radius: 14px; background: #d9d6cf; font-size: 12px; font-weight: 800; }
+  .bp-tag--tf { background: #111; color: #fff; }
+  .bp-num { font-family: monospace; font-size: 19px; font-weight: 800; white-space: nowrap; }
+  .bp-down { color: #6f6c66; }
+  .bp-signal { display: inline-flex; min-height: 34px; align-items: center; justify-content: center; border-radius: 7px; border: 2px solid #111; font-size: 14px; font-weight: 800; white-space: nowrap; }
+  .bp-signal--long { background: #111; color: #fff; }
+  .bp-signal--unwind { background: #7c7972; border-color: #7c7972; color: #fff; }
+  .bp-signal--short { background: repeating-linear-gradient(135deg,#fff,#fff 7px,#ccc 7px,#ccc 9px); }
+  .bp-section-head { min-height: 53px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; background: #e7e5df; font-size: 16px; font-weight: 800; letter-spacing: 1px; }
+  .bp-mover-list { flex: 1; display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)); padding: 0 22px; }
+  .bp-mover { min-height: 0; padding: 10px 8px; border-bottom: 2px solid #dedbd4; display: flex; flex-direction: column; justify-content: center; }
+  .bp-mover:last-child { border-bottom: 0; }
+  .bp-mover-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .bp-mover-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 20px; font-weight: 800; white-space: nowrap; }
+  .bp-mover-pct { font-family: monospace; font-size: 21px; font-weight: 800; white-space: nowrap; }
+  .bp-bar { height: 7px; margin-top: 11px; border-radius: 4px; background: #dfddd7; overflow: hidden; }
+  .bp-bar-fill { height: 100%; border-radius: 4px; background: #111; }
+  .bp-bar-fill--down { background: #77746e; }
+  .bp-footer { display: flex; justify-content: space-between; align-items: center; min-height: 26px; font-size: 15px; font-weight: 700; color: #666; }
+  .bp-footer strong { color: #111; }
+  .bp-warning { padding: 3px 10px; border: 2px solid #111; border-radius: 12px; color: #111; }
+</style>
+
+<div class="bp-board">
+  <div class="bp-header">
+    <div class="bp-brand">
+      <div class="bp-mark"><span></span><span></span><span></span><span></span></div>
+      <div>
+        <div class="bp-title">BINANCE PERPETUALS</div>
+        <div class="bp-subtitle">4H OI & PRICE MONITOR</div>
+      </div>
+    </div>
+    <div class="bp-meta">
+      <div class="bp-updated">UPDATED {{ u }} · TAIPEI</div>
+      <div class="bp-universe">ALL PERPETUALS&nbsp;&nbsp; UM {{ um }}&nbsp;&nbsp; CM {{ cm }}&nbsp;&nbsp; TRADFI {{ tf }}</div>
+    </div>
+  </div>
+
+  <div class="bp-main">
+    <section class="bp-panel">
+      <div class="bp-panel-head">
+        <div>
+          <div class="bp-panel-title">OI MOMENTUM · 4H</div>
+          <div class="bp-panel-note">Ranked by absolute OI value change · min OI $5M</div>
+        </div>
+        <div class="bp-summary">
+          <div class="bp-summary-box">
+            <div class="bp-summary-label">TOTAL OI</div>
+            <div class="bp-summary-value">{{ to }}</div>
+          </div>
+          <div class="bp-summary-box">
+            <div class="bp-summary-label">4H NET</div>
+            <div class="bp-summary-value">{{ no }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bp-table-head">
+        <div>SYMBOL</div><div>OI USD</div><div>Δ OI 4H</div><div>Δ PX 4H</div><div>SIGNAL</div>
+      </div>
+      <div class="bp-oi-list">
+        {% for x in oi %}
+        <div class="bp-oi-row">
+          <div class="bp-symbol">
+            <span>{{ x.s }}</span>
+            <span class="bp-tag {% if x.t == 'TF' %}bp-tag--tf{% endif %}">{{ x.t }}</span>
+          </div>
+          <div class="bp-num">{{ x.v }}</div>
+          <div class="bp-num {% if x.od == 'down' %}bp-down{% endif %}">{{ x.o }}</div>
+          <div class="bp-num {% if x.pd == 'down' %}bp-down{% endif %}">{{ x.p }}</div>
+          <div class="bp-signal {% if x.g == 'LONG BUILD' %}bp-signal--long{% elsif x.g == 'SHORT BUILD' %}bp-signal--short{% elsif x.g == 'LONG UNWIND' %}bp-signal--unwind{% endif %}">{{ x.g }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="bp-panel">
+      <div class="bp-panel-head">
+        <div>
+          <div class="bp-panel-title">PRICE MOMENTUM · 4H</div>
+          <div class="bp-panel-note">Wall-clock rolling window · active markets</div>
+        </div>
+      </div>
+
+      <div class="bp-section-head"><span>TOP GAINERS</span><span>4H CHANGE</span></div>
+      <div class="bp-mover-list">
+        {% for x in ga %}
+        <div class="bp-mover">
+          <div class="bp-mover-top">
+            <div class="bp-mover-name"><span>{{ x.s }}</span><span class="bp-tag {% if x.t == 'TF' %}bp-tag--tf{% endif %}">{{ x.t }}</span></div>
+            <div class="bp-mover-pct">{{ x.p }}</div>
+          </div>
+          <div class="bp-bar"><div class="bp-bar-fill" style="width: {{ x.w }}%;"></div></div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="bp-section-head"><span>TOP LOSERS</span><span>4H CHANGE</span></div>
+      <div class="bp-mover-list">
+        {% for x in lo %}
+        <div class="bp-mover">
+          <div class="bp-mover-top">
+            <div class="bp-mover-name"><span>{{ x.s }}</span><span class="bp-tag {% if x.t == 'TF' %}bp-tag--tf{% endif %}">{{ x.t }}</span></div>
+            <div class="bp-mover-pct bp-down">{{ x.p }}</div>
+          </div>
+          <div class="bp-bar"><div class="bp-bar-fill bp-bar-fill--down" style="width: {{ x.w }}%;"></div></div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <div class="bp-footer">
+    <div><strong>BINANCE HISTORY BACKFILL</strong> · 5M BARS · ROLLING 4H · TRADFI CLOSED MARKETS EXCLUDED</div>
+    <div>{% if ec > 0 %}<span class="bp-warning">{{ ec }} SYMBOLS OMITTED</span>{% else %}<strong>DATA OK</strong>{% endif %}</div>
+  </div>
+</div>

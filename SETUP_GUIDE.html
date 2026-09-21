@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TRMNL Binance OI & Price Dashboard — 安裝教學</title>
+  <style>
+    :root { --ink:#151515; --paper:#f6f4ef; --card:#fff; --line:#d8d4cb; --muted:#68645d; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif; line-height:1.65; }
+    main { width:min(980px,calc(100% - 36px)); margin:42px auto 90px; }
+    header { padding:34px 38px; border:3px solid var(--ink); border-radius:22px; background:var(--ink); color:#fff; }
+    h1 { margin:0 0 8px; font-size:34px; line-height:1.2; }
+    header p { margin:0; color:#d7d7d7; }
+    .badge { display:inline-block; margin-top:18px; padding:5px 12px; border:1px solid #aaa; border-radius:99px; font-size:13px; font-weight:700; }
+    section { margin-top:24px; padding:30px 34px; border:2px solid var(--ink); border-radius:18px; background:var(--card); }
+    h2 { margin:0 0 18px; font-size:25px; }
+    h3 { margin:25px 0 8px; font-size:18px; }
+    p { margin:10px 0; }
+    ol,ul { padding-left:24px; }
+    li { margin:8px 0; }
+    code { font-family:"SFMono-Regular",Consolas,monospace; }
+    .codebox { position:relative; margin:14px 0; }
+    pre { margin:0; padding:18px 92px 18px 18px; overflow:auto; border-radius:12px; background:#111; color:#f5f5f5; line-height:1.45; }
+    button { position:absolute; right:10px; top:10px; padding:7px 11px; border:1px solid #888; border-radius:8px; background:#fff; color:#111; cursor:pointer; font-weight:700; }
+    .note { padding:14px 17px; border-left:5px solid #111; background:#ece9e2; }
+    .ok { padding:14px 17px; border:2px solid #111; border-radius:11px; font-weight:700; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:11px 12px; border-bottom:1px solid var(--line); text-align:left; }
+    th { background:#ece9e2; }
+    a { color:inherit; font-weight:700; }
+    footer { margin-top:25px; color:var(--muted); text-align:center; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>TRMNL X — Binance 4H OI & Price Monitor</h1>
+    <p>USDⓈ-M、COIN-M、TradFi Perpetual｜歷史回補｜Mac 測試｜GitHub Actions 全天候更新</p>
+    <span class="badge">Python 3.11+ · 不需要 Binance API Key</span>
+  </header>
+
+  <section>
+    <h2>先理解這套架構</h2>
+    <table>
+      <tr><th>項目</th><th>做法</th></tr>
+      <tr><td>4h 基準</td><td>每次執行都向 Binance 查最近 55 根 5 分鐘資料，選擇最接近 T−4h 的一筆。</td></tr>
+      <tr><td>Mac 關機</td><td>正式更新交給 GitHub Actions；Mac 只用於第一次測試及選配備援。</td></tr>
+      <tr><td>API 異常</td><td>整體成功率不足 60% 時不推送，TRMNL 保留最後一次成功畫面。</td></tr>
+      <tr><td>TradFi 休市</td><td>仍在完整市場範圍內，但休市期間不進入 movers 排行。</td></tr>
+      <tr><td>新上市商品</td><td>不足四小時歷史就排除，不用錯誤基準硬算。</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>步驟 1：放到正確資料夾</h2>
+    <p>將 ZIP 解壓縮後，把資料夾放在原本 PL 專案旁邊，完整位置建議為：</p>
+    <div class="codebox"><pre><code>$HOME/Documents/temnl/trmnl-binance</code></pre><button>複製</button></div>
+    <p>開啟 Terminal，確認路徑：</p>
+    <div class="codebox"><pre><code>cd "$HOME/Documents/temnl/trmnl-binance"
+pwd
+ls</code></pre><button>複製</button></div>
+    <p><code>ls</code> 應該看得到 <code>binance_dashboard.py</code>、<code>trmnl_full_markup.html</code> 和 <code>config.example.json</code>。</p>
+  </section>
+
+  <section>
+    <h2>步驟 2：建立 TRMNL Private Plugin</h2>
+    <ol>
+      <li>進入 TRMNL 網站的 Plugins／Recipes 頁面。</li>
+      <li>建立一個新的 <strong>Private Plugin</strong>，名稱可填 <code>Binance Perpetual Pulse</code>。</li>
+      <li>資料策略選擇 <strong>Webhook</strong>，儲存一次。</li>
+      <li>複製頁面提供的完整 Webhook URL，格式應以 <code>https://trmnl.com/api/custom_plugins/</code> 開頭。</li>
+      <li>進入 <strong>Edit Markup</strong>，打開 <strong>Full</strong> 分頁。</li>
+      <li>將 <code>trmnl_full_markup.html</code> 的全部內容貼進去並儲存。不要貼到 Shared。</li>
+    </ol>
+    <div class="note">此時預覽可能是空的，因為還沒有送入第一筆資料，屬於正常現象。</div>
+  </section>
+
+  <section>
+    <h2>步驟 3：設定本機 Webhook</h2>
+    <div class="codebox"><pre><code>cd "$HOME/Documents/temnl/trmnl-binance"
+cp config.example.json config.json
+open -e config.json</code></pre><button>複製</button></div>
+    <p>把第一行的 placeholder 換成剛才複製的 Webhook URL。其他設定先不要改：</p>
+    <div class="codebox"><pre><code>{
+  "trmnl_webhook_url": "https://trmnl.com/api/custom_plugins/你的完整網址",
+  "min_oi_usd": 5000000,
+  "oi_rows": 10,
+  "price_rows": 5,
+  "workers": 64,
+  "history_limit": 55,
+  "min_success_ratio": 0.6,
+  "cache_max_age_minutes": 30
+}</code></pre><button>複製</button></div>
+    <p>保護設定檔：</p>
+    <div class="codebox"><pre><code>chmod 600 config.json
+chmod 700 binance_dashboard.py</code></pre><button>複製</button></div>
+  </section>
+
+  <section>
+    <h2>步驟 4：先做不推送的小測試</h2>
+    <p>這會各抽取一部分 UM、CM、TradFi，確認 Binance API 與 4h 計算正常，但不會更新 TRMNL：</p>
+    <div class="codebox"><pre><code>cd "$HOME/Documents/temnl/trmnl-binance"
+python3 binance_dashboard.py \
+  --config config.json \
+  --dry-run \
+  --max-symbols 30</code></pre><button>複製</button></div>
+    <p>最後應該看到類似：</p>
+    <div class="codebox"><pre><code>OK Binance Perpetuals | 30/30 symbols | UM 10 CM 10 TF 10 | 1750 bytes</code></pre><button>複製</button></div>
+  </section>
+
+  <section>
+    <h2>步驟 5：第一次全市場推送</h2>
+    <div class="codebox"><pre><code>cd "$HOME/Documents/temnl/trmnl-binance"
+python3 binance_dashboard.py --config config.json</code></pre><button>複製</button></div>
+    <p>全市場約有數百個商品，需要逐商品抓 OI 與 Mark Price 歷史；依 Binance 回應速度可能需數分鐘。</p>
+    <ol>
+      <li>看到最後一行 <code>OK Binance Perpetuals</code> 才算成功。</li>
+      <li>回到 TRMNL Private Plugin 頁面確認 Web Preview。</li>
+      <li>按 <strong>Force Refresh</strong> 更新 TRMNL 伺服器畫面。</li>
+      <li>實體 TRMNL X 仍要等下一次喚醒；Force Refresh 不代表電子紙會立即喚醒。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>步驟 6：設定 GitHub Actions（電腦關機仍更新）</h2>
+    <h3>6A. 建立 Repository</h3>
+    <ol>
+      <li>在 GitHub 建立 repository，名稱建議 <code>trmnl-binance-dashboard</code>。</li>
+      <li>公開 repository 最簡單；程式沒有帳號資料，Webhook 會另外放在 Secret。</li>
+      <li>不要把本機 <code>config.json</code> 上傳；專案的 <code>.gitignore</code> 已排除它。</li>
+    </ol>
+    <p>在專案資料夾執行，下方 remote URL 要換成你自己的 GitHub 帳號：</p>
+    <div class="codebox"><pre><code>cd "$HOME/Documents/temnl/trmnl-binance"
+git init
+git add .
+git commit -m "Initial TRMNL Binance dashboard"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/trmnl-binance-dashboard.git
+git push -u origin main</code></pre><button>複製</button></div>
+
+    <h3>6B. 加入 Webhook Secret</h3>
+    <ol>
+      <li>GitHub repository → <strong>Settings</strong>。</li>
+      <li><strong>Secrets and variables</strong> → <strong>Actions</strong>。</li>
+      <li>按 <strong>New repository secret</strong>。</li>
+      <li>Name 填 <code>TRMNL_WEBHOOK_URL</code>。</li>
+      <li>Secret 貼上完整 TRMNL Webhook URL 後儲存。</li>
+    </ol>
+
+    <h3>6C. 手動測試一次</h3>
+    <ol>
+      <li>Repository → <strong>Actions</strong>。</li>
+      <li>左側選 <strong>Update TRMNL Binance dashboard</strong>。</li>
+      <li>按 <strong>Run workflow</strong>。</li>
+      <li>工作變成綠色勾勾，並在 log 看到 <code>OK Binance Perpetuals</code> 即完成。</li>
+    </ol>
+    <p>工作流排程是每小時的 02、12、22、32、42、52 分，也就是每 10 分鐘一次。GitHub 排程可能偶爾延遲幾分鐘，但 4h 計算仍以 Binance server time 為準。</p>
+    <div class="note">GitHub 可能停用長期沒有 repository activity 的公開 repo 排程。建議每 1–2 個月檢查一次 Actions；如果顯示 disabled，按 Enable workflow 即可恢復。</div>
+  </section>
+
+  <section>
+    <h2>步驟 7：Mac 排程（選配備援）</h2>
+    <p>GitHub Actions 正常後不一定要開本機排程。若仍希望 Mac 開機時也能補推：</p>
+    <div class="codebox"><pre><code>cd "$HOME/Documents/temnl/trmnl-binance"
+chmod +x install_mac_schedule.sh uninstall_mac_schedule.sh
+./install_mac_schedule.sh</code></pre><button>複製</button></div>
+    <p>查看執行紀錄：</p>
+    <div class="codebox"><pre><code>tail -f "$HOME/Documents/temnl/trmnl-binance/binance_dashboard.log"</code></pre><button>複製</button></div>
+    <p>取消 Mac 排程：</p>
+    <div class="codebox"><pre><code>cd "$HOME/Documents/temnl/trmnl-binance"
+./uninstall_mac_schedule.sh</code></pre><button>複製</button></div>
+    <div class="note">GitHub 與 Mac 同時啟用不會算錯，但可能在接近的時間重複推送。一般建議以 GitHub 為主。</div>
+  </section>
+
+  <section>
+    <h2>異常時怎麼判斷</h2>
+    <table>
+      <tr><th>訊息</th><th>處理</th></tr>
+      <tr><td>TRMNL webhook URL does not look valid</td><td>重新複製 Private Plugin 的完整 Webhook URL。</td></tr>
+      <tr><td>Binance rate limited</td><td>等 5–10 分鐘再跑；不要同時手動啟動多次全市場任務。</td></tr>
+      <tr><td>Only … symbols succeeded</td><td>程式刻意不推送，TRMNL 會保留最後成功畫面；稍後重跑即可。</td></tr>
+      <tr><td>某些 symbols omitted</td><td>少數新上市、資料不足或暫時 timeout；畫面仍可更新，footer 會顯示省略數。</td></tr>
+      <tr><td>GitHub Action 紅色</td><td>打開失敗 job 的 log；最常見原因是 Secret 名稱拼錯或 Binance 暫時 timeout。</td></tr>
+      <tr><td>Preview 更新、裝置沒更新</td><td>等待 TRMNL X 下一次 wake；網站 Force Refresh 不會強制喚醒電子紙。</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>預設資料規則</h2>
+    <ul>
+      <li>OI 排名：依 <strong>OI USD 變動絕對金額</strong>，不是 OI 百分比。</li>
+      <li>Price movers：依 Mark Price rolling 4h 漲跌幅。</li>
+      <li>最低 OI：5,000,000 USD，避免低流動性商品霸榜。</li>
+      <li>COIN-M：將 Binance 回傳的 margin-asset OI value 乘以 Mark Price，換算成 USD 名目值。</li>
+      <li>歷史容忍：T−4h 前後 15 分鐘內最接近的一筆。</li>
+      <li>全面失敗：不覆蓋 TRMNL 最後成功資料。</li>
+    </ul>
+    <div class="ok">完成後，Mac 是否開機不再影響 TRMNL 的定期更新。</div>
+  </section>
+
+  <footer>TRMNL Binance Perpetual Pulse · Setup Guide</footer>
+</main>
+<script>
+  document.querySelectorAll('.codebox button').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const text = button.parentElement.querySelector('code').innerText;
+      await navigator.clipboard.writeText(text);
+      const old = button.textContent;
+      button.textContent = '已複製';
+      setTimeout(() => button.textContent = old, 1200);
+    });
+  });
+</script>
+</body>
+</html>

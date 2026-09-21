@@ -1,0 +1,10 @@
+{
+  "trmnl_webhook_url": "<PASTE_TRMNL_WEBHOOK_URL_HERE>",
+  "min_oi_usd": 5000000,
+  "oi_rows": 10,
+  "price_rows": 5,
+  "workers": 64,
+  "history_limit": 55,
+  "min_success_ratio": 0.6,
+  "cache_max_age_minutes": 30
+}
