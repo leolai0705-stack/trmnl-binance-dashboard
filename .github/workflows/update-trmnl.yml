@@ -1,0 +1,29 @@
+name: Update TRMNL Binance dashboard
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "2,12,22,32,42,52 * * * *"
+
+concurrency:
+  group: trmnl-binance-dashboard
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch Binance data and update TRMNL
+        env:
+          TRMNL_WEBHOOK_URL: ${{ secrets.TRMNL_WEBHOOK_URL }}
+        run: python3 binance_dashboard.py --state-dir .state
